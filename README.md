@@ -14,6 +14,12 @@ Make sure you have Python installed. You can download Python from [python.org](h
 
 1. **Clone the repository**
 
-   ```sh
+   ```
    git clone https://github.com/yourusername/solar-system-simulator.git
    cd solar-system-simulator
+   ```
+2. **Create a virtual environment**
+   ```
+   python -m venv venv
+   ```
+    
