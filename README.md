@@ -22,4 +22,26 @@ Make sure you have Python installed. You can download Python from [python.org](h
    ```
    python -m venv venv
    ```
+3. **Activate the virtual environment**
+   ```
+   source venv/bin/activate
+   ```
+4. **Install the required packages**
+   ```
+   pip install -r requirements.txt
+   ```
+
+5. **Run the `main.py` file**
+   ```
+   python3 main.py
+   ```
+
+**Usage**
+* Use the arrow keys to adjust the simulation speed:
+  * UP arrow: Increase speed
+  * DOWN arrow: Decrease speed
+  * SPACE: Reset speed to normal
+* Hover over planets to see detailed information.
+
+
 
