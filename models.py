@@ -1,33 +1,12 @@
-import pygame
-import math
-
-WIDTH, HEIGHT = 1650, 1000
-GREY = (100, 100, 100)
 
 import pygame
 import math
 
 WIDTH, HEIGHT = 1650, 1000
+GREY = (100, 100, 100)  # Orbit path color
 
 class CelestialBody:
     def __init__(self, name, color, radius, distance_from_sun_au, mass, orbital_period=None, diameter=None, surface_gravity=None, atmosphere=None, num_moons=None, avg_temp_day=None, avg_temp_night=None):
-        """
-        Initialize a CelestialBody instance.
-
-        Args:
-            name (str): Name of the celestial body.
-            color (tuple): Color representation (RGB) of the celestial body.
-            radius (int): Radius of the celestial body.
-            distance_from_sun_au (float): Distance from the Sun in astronomical units (AU).
-            mass (float): Mass of the celestial body in kilograms.
-            orbital_period (float, optional): Orbital period in Earth days. Defaults to None.
-            diameter (int, optional): Diameter of the celestial body in kilometers. Defaults to None.
-            surface_gravity (float, optional): Surface gravity relative to Earth. Defaults to None.
-            atmosphere (str, optional): Description of the atmosphere. Defaults to None.
-            num_moons (int, optional): Number of moons orbiting the celestial body. Defaults to None.
-            avg_temp_day (int, optional): Average daytime temperature in Celsius. Defaults to None.
-            avg_temp_night (int, optional): Average nighttime temperature in Celsius. Defaults to None.
-        """       
         self.name = name
         self.color = color
         self.radius = radius
@@ -39,60 +18,40 @@ class CelestialBody:
         self.num_moons = num_moons
         self.avg_temp_day = avg_temp_day
         self.avg_temp_night = avg_temp_night
-        self.angle = 0
-        self.laps = 0
-        self.distance_from_sun = distance_from_sun_au * 250  # Conversion from AU to pixels
+        self.angle = 0  # Starting angle
+        self.laps = 0  # Tracks the number of complete orbits
+        self.distance_from_sun = distance_from_sun_au * 200  # Conversion from AU to pixels
+        if name == "Jupiter":
+            self.distance_from_sun = distance_from_sun_au * 90
+        elif name == "Saturn":
+            self.distance_from_sun = distance_from_sun_au * 65
+        elif name == "Uranus":
+            self.distance_from_sun = distance_from_sun_au * 45
+        elif name == "Neptune":
+            self.distance_from_sun = distance_from_sun_au * 35
 
         # Initialize position centered in the window
         self.x = WIDTH / 2 + self.distance_from_sun * math.cos(math.radians(self.angle))
         self.y = HEIGHT / 2 + self.distance_from_sun * math.sin(math.radians(self.angle))
 
     def update_position(self, delta_time):
-        """
-        Update the position of the celestial body based on its orbital period.
-
-        Args:
-            delta_time (float): Time elapsed since the last update in seconds.
-        """
         if self.orbital_period is not None:
             previous_angle = self.angle
             self.angle += (360 / self.orbital_period) * delta_time
             self.angle = self.angle % 360
-            if self.angle < previous_angle:
+            if self.angle < previous_angle:  # This implies a wrap-around, hence a complete orbit
                 self.laps += 1
             self.x = WIDTH / 2 + self.distance_from_sun * math.cos(math.radians(self.angle))
             self.y = HEIGHT / 2 + self.distance_from_sun * math.sin(math.radians(self.angle))
 
-    def draw(self, surface):
-        """
-        Draw the celestial body on the given surface.
+    def draw(self, surface, zoom_factor):
+        pygame.draw.circle(surface, self.color, (int(WIDTH // 2 + (self.x - WIDTH // 2) * zoom_factor), int(HEIGHT // 2 + (self.y - HEIGHT // 2) * zoom_factor)), int(self.radius * zoom_factor))
 
-        Args:
-            surface (pygame.Surface): The surface to draw the celestial body on.
-        """       
-        pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.radius)
-
-    def check_hover(self, mouse_x, mouse_y):
-        """
-        Check if the mouse is hovering over the celestial body.
-
-        Args:
-            mouse_x (int): X-coordinate of the mouse.
-            mouse_y (int): Y-coordinate of the mouse.
-
-        Returns:
-            bool: True if the mouse is hovering over the celestial body, False otherwise.
-        """      
-        distance = math.sqrt((mouse_x - self.x) ** 2 + (mouse_y - self.y) ** 2)
-        return distance <= self.radius
+    def check_hover(self, mouse_x, mouse_y, zoom_factor):
+        distance = math.sqrt(((mouse_x - WIDTH // 2) / zoom_factor + WIDTH // 2 - self.x) ** 2 + ((mouse_y - HEIGHT // 2) / zoom_factor + HEIGHT // 2 - self.y) ** 2)
+        return distance <= self.radius * zoom_factor
 
     def get_info(self):
-        """
-        Get detailed information about the celestial body.
-
-        Returns:
-            str: A string containing detailed information about the celestial body.
-        """       
         if self.orbital_period is not None:
             details = (
                 f"Planet {self.name}\n"
@@ -108,44 +67,23 @@ class CelestialBody:
             )
             return details
         else:
-            details = (
-                f"Star {self.name}\n"
-                f"Star Type G-type main-sequence star (G2V)\n"
-                f"Mass: {self.mass:.2e} kg\n"
-                f"Diameter: 1.392 million km\n"
-                f"Surface Temperature: Approximately 5,500 °C\n"
-                f"Age: Around 4.6 billion years\n"
-            )
-            return details
+            return f"{self.name}: Mass: {self.mass:.2e} kg"
 
-
-class Moon:
+class Moon(CelestialBody):
     def __init__(self, name, color, radius, distance_from_parent_au, mass, orbital_period, parent):
-        self.name = name
-        self.color = color
-        self.radius = radius
-        self.mass = mass
-        self.orbital_period = orbital_period
+        super().__init__(name, color, radius, distance_from_parent_au, mass, orbital_period)
         self.parent = parent
-        self.angle = 0
-        self.laps = 0
-        self.distance_from_parent = distance_from_parent_au * 250  # Conversion from AU to pixels
-
-        # Initialize position centered on the parent
-        self.update_position(0)
 
     def update_position(self, delta_time):
         if self.orbital_period is not None:
             previous_angle = self.angle
             self.angle += (360 / self.orbital_period) * delta_time
             self.angle = self.angle % 360
-            if self.angle < previous_angle:
+            if self.angle < previous_angle:  # This implies a wrap-around, hence a complete orbit
                 self.laps += 1
-            self.x = self.parent.x + self.distance_from_parent * math.cos(math.radians(self.angle))
-            self.y = self.parent.y + self.distance_from_parent * math.sin(math.radians(self.angle))
+            self.x = self.parent.x + self.distance_from_sun * math.cos(math.radians(self.angle))
+            self.y = self.parent.y + self.distance_from_sun * math.sin(math.radians(self.angle))
 
-    def draw(self, surface):
-        pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.radius)
+    def draw_orbit(self, surface, zoom_factor):
+        pygame.draw.circle(surface, GREY, (int(WIDTH // 2 + (self.parent.x - WIDTH // 2) * zoom_factor), int(HEIGHT // 2 + (self.parent.y - HEIGHT // 2) * zoom_factor)), int(self.distance_from_sun * zoom_factor), 1)
 
-    def draw_orbit(self, surface):
-        pygame.draw.circle(surface, GREY, (int(self.parent.x), int(self.parent.y)), int(self.distance_from_parent), 1)
