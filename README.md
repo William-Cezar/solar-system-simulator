@@ -41,7 +41,10 @@ Make sure you have Python installed. You can download Python from [python.org](h
   * UP arrow: Increase speed
   * DOWN arrow: Decrease speed
   * SPACE: Reset speed to normal
-* Hover over planets to see detailed information.
+* Click on a planet to see detailed information.
+* Zoom in/out
+  * By clicking the "+" signal, you can zoom in.
+  * By clicking the "-" signal, you can zoom out.
 
 
 
